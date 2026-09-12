@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privs Chpps</title>
+<link rel="icon" type="image/png" href="img/akala.png">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{color:#fff;font-family:'Open Sans',sans-serif;background:#000;overflow-x:hidden}
+#login{position:fixed;inset:0;background:radial-gradient(circle at center,rgba(20,20,20,.6) 0%,rgba(0,0,0,.95) 100%);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:999999;transition:opacity .8s ease,visibility .8s ease}
+#login.oculto{opacity:0;visibility:hidden}
+#login .logo{font-size:clamp(2.5rem,9vw,5rem);font-weight:800;letter-spacing:6px;color:#fff;text-shadow:0 0 25px rgba(255,255,255,.6);animation:glow 2.5s infinite alternate;text-align:center}
+@keyframes glow{0%{text-shadow:0 0 15px rgba(255,255,255,.4)}100%{text-shadow:0 0 35px rgba(255,255,255,.9)}}
+#login .sub{color:#ccc;letter-spacing:4px;font-size:1rem;margin:20px 0 40px;text-transform:uppercase;font-weight:600}
+#btn-ingresar{background:transparent;color:#fff;border:2px solid #fff;padding:14px 50px;font-size:1rem;letter-spacing:4px;text-transform:uppercase;cursor:pointer;font-weight:700;transition:all .4s;border-radius:4px;animation:pulseBtn 2s infinite;font-family:'Open Sans',sans-serif}
+@keyframes pulseBtn{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}50%{box-shadow:0 0 25px 5px rgba(255,255,255,.3)}}
+#btn-ingresar:hover{background:#fff;color:#000;box-shadow:0 0 30px rgba(255,255,255,.7)}
+#btn-ingresar:active{transform:scale(.92);background:#e0e0e0}
+#disparo-overlay{position:fixed;inset:0;pointer-events:none;z-index:9999999;opacity:0}
+#disparo-overlay.activo{animation:disparoFlash 1s ease-out forwards}
+@keyframes disparoFlash{0%{opacity:1;background:radial-gradient(circle at center,#fff 0%,rgba(255,255,255,.8) 20%,transparent 70%)}100%{opacity:0;background:radial-gradient(circle at center,transparent 0%,transparent 100%)}}
+.onda-disparo{position:fixed;top:50%;left:50%;width:0;height:0;border-radius:50%;border:4px solid #fff;transform:translate(-50%,-50%);pointer-events:none;z-index:9999999;opacity:0}
+.onda-disparo.activa{animation:ondaExpandir .9s ease-out forwards}
+@keyframes ondaExpandir{0%{width:0;height:0;opacity:1;border-width:8px;box-shadow:0 0 40px 10px rgba(255,255,255,.9)}100%{width:250vmax;height:250vmax;opacity:0;border-width:1px}}
+body.shake{animation:shakeScreen .5s ease-in-out}
+@keyframes shakeScreen{0%,100%{transform:translate(0,0)}10%{transform:translate(-8px,-6px)}20%{transform:translate(8px,6px)}30%{transform:translate(-6px,4px)}40%{transform:translate(6px,-4px)}50%{transform:translate(-4px,2px)}60%{transform:translate(4px,-2px)}70%{transform:translate(-2px,1px)}80%{transform:translate(2px,-1px)}90%{transform:translate(-1px,0)}}
+#contenedor-rayos{position:fixed;inset:0;pointer-events:none;z-index:9999998;overflow:hidden;opacity:0;transition:opacity .5s ease}
+#contenedor-rayos.activo{opacity:1}
+.rayo-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;animation:rayoVida 1.2s ease-out forwards}
+.rayo-svg path{stroke-linecap:round;stroke-linejoin:round;fill:none}
+.rayo-svg .nucleo{stroke:#fff;stroke-width:3;filter:drop-shadow(0 0 6px #fff) drop-shadow(0 0 12px #fff)}
+.rayo-svg .halo{stroke:rgba(220,220,220,.7);stroke-width:9;filter:blur(4px)}
+.rayo-svg .halo2{stroke:rgba(180,180,180,.4);stroke-width:18;filter:blur(10px)}
+@keyframes rayoVida{0%{opacity:0}10%{opacity:1}15%{opacity:.5}20%{opacity:1}30%{opacity:.7}40%{opacity:1}100%{opacity:0}}
+.flash-rayo{position:fixed;inset:0;background:radial-gradient(circle at center,rgba(255,255,255,.9),transparent 70%);pointer-events:none;z-index:9999997;opacity:0}
+.flash-rayo.activo{animation:flashRayo .5s ease-out forwards}
+@keyframes flashRayo{0%{opacity:.9}100%{opacity:0}}
+#video-fondo{position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:0}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1;pointer-events:none}
+.contenido{position:relative;z-index:2;padding:20px 20px 100px;max-width:1200px;margin:0 auto;opacity:0;transition:opacity 1s ease}
+.contenido.visible{opacity:1}
+.titulo{font-weight:800;font-size:clamp(1.8rem,7vw,3.5rem);text-align:center;letter-spacing:4px;color:#fff;text-shadow:0 0 20px rgba(255,255,255,.5);padding:20px 0 5px;text-transform:uppercase}
+.subtitulo{text-align:center;font-size:clamp(.85rem,1.6vw,1.1rem);color:#fff;margin-bottom:25px;letter-spacing:3px;text-transform:uppercase;font-weight:600}
+.menu-wrapper{display:flex;justify-content:center;margin:20px 0}
+.menu{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;background:rgba(0,0,0,.92);padding:10px 15px;border-radius:6px;border:1px solid #fff;box-shadow:0 0 25px rgba(255,255,255,.15)}
+.menu button{background:transparent;color:#ccc;border:1px solid #555;padding:10px 18px;font-weight:600;font-size:clamp(.7rem,1vw,.9rem);text-transform:uppercase;cursor:pointer;transition:.3s;border-radius:4px;letter-spacing:2px;font-family:'Open Sans',sans-serif}
+.menu button:hover,.menu button.activo{color:#fff;border-color:#fff;box-shadow:0 0 15px rgba(255,255,255,.4);transform:translateY(-2px)}
+.seccion{display:none!important;padding:30px 0}
+.seccion.activa{display:grid!important}
+.staff{grid-template-columns:repeat(auto-fit,minmax(220px,280px));justify-content:center;gap:30px;max-width:900px;margin:0 auto}
+.card{background:rgba(0,0,0,.92);border:1px solid #333;border-radius:8px;padding:25px 20px;text-align:center;transition:.4s;cursor:pointer}
+.card:hover{transform:translateY(-6px);border-color:#fff;box-shadow:0 10px 30px rgba(255,255,255,.2)}
+.avatar{width:95px;height:95px;border-radius:50%;overflow:hidden;margin:0 auto 15px;border:2px solid #fff;box-shadow:0 0 20px rgba(255,255,255,.3)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.name{font-weight:700;font-size:1.2rem;letter-spacing:3px;color:#fff;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px}
+.emoji-dragon{display:inline-block;font-size:1.4rem;animation:dragonFuego 1.5s infinite;transform-origin:center}
+@keyframes dragonFuego{
+  0%{transform:scale(1) rotate(0deg);filter:drop-shadow(0 0 8px rgba(255,80,0,.8)) drop-shadow(0 0 16px rgba(255,150,0,.6))}
+  25%{transform:scale(1.15) rotate(-5deg);filter:drop-shadow(0 0 14px rgba(255,120,0,1)) drop-shadow(0 0 26px rgba(255,200,0,.8))}
+  50%{transform:scale(1.25) rotate(5deg);filter:drop-shadow(0 0 18px rgba(255,60,0,1)) drop-shadow(0 0 30px rgba(255,150,0,.9))}
+  75%{transform:scale(1.15) rotate(-3deg);filter:drop-shadow(0 0 14px rgba(255,120,0,1)) drop-shadow(0 0 26px rgba(255,200,0,.8))}
+  100%{transform:scale(1) rotate(0deg);filter:drop-shadow(0 0 8px rgba(255,80,0,.8)) drop-shadow(0 0 16px rgba(255,150,0,.6))}
+}
+.role{color:#fff;font-size:.85rem;text-transform:uppercase;font-weight:600;letter-spacing:3px;margin-top:6px}
+.ver-perfil{color:#aaa;font-size:.75rem;text-transform:uppercase;font-weight:600;letter-spacing:2px;margin-top:10px}
+.aportes-grid{grid-template-columns:repeat(auto-fit,minmax(260px,320px));justify-content:center;gap:30px;margin:20px auto 0}
+.aporte-card{background:rgba(0,0,0,.94);border:1px solid #333;border-radius:8px;padding:18px;transition:.4s;position:relative}
+.aporte-card:hover{transform:translateY(-6px);border-color:#fff;box-shadow:0 10px 30px rgba(255,255,255,.2)}
+.aporte-card h3{color:#fff;font-size:1.2rem;margin-bottom:8px;letter-spacing:2px;font-weight:700;text-transform:uppercase}
+.aporte-card p{font-size:.9rem;margin:5px 0;color:#ccc;letter-spacing:1px}
+.verde{color:#4caf50}
+.rojo{color:#ff5252;font-weight:600}
+.video-thumb{margin:14px 0;border:1px solid #333;border-radius:6px;overflow:hidden}
+.video-thumb img{width:100%;display:block}
+.btn-descarga{display:block;text-align:center;background:transparent;color:#fff;text-decoration:none;padding:12px;border-radius:4px;font-weight:700;font-size:1rem;letter-spacing:3px;transition:.4s;border:1px solid #fff;cursor:pointer;text-transform:uppercase;font-family:'Open Sans',sans-serif}
+.btn-descarga:hover{background:#fff;color:#000;box-shadow:0 0 20px rgba(255,255,255,.6)}
+.btn-volver{display:inline-block;background:transparent;color:#fff;border:1px solid #fff;padding:10px 24px;font-weight:600;font-size:.85rem;letter-spacing:2px;cursor:pointer;border-radius:4px;transition:.3s;text-transform:uppercase;margin-bottom:20px;font-family:'Open Sans',sans-serif}
+.btn-volver:hover{background:#fff;color:#000}
+.perfil-titulo{font-size:clamp(1.2rem,4vw,2rem);font-weight:800;text-align:center;letter-spacing:4px;color:#fff;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px}
+.perfil-sub{text-align:center;color:#aaa;font-size:.9rem;letter-spacing:3px;text-transform:uppercase;font-weight:600;margin-bottom:25px}
+.ranking-item{position:relative}
+.ranking-numero{position:absolute;top:-10px;left:-10px;background:#000;color:#fff;font-weight:700;padding:5px 14px;border-radius:20px;font-size:1rem;border:2px solid #fff;z-index:2}
+.ranking-badge{position:absolute;top:-10px;right:-10px;background:#fff;color:#000;font-weight:700;padding:5px 12px;border-radius:20px;font-size:.85rem;z-index:2}
+.ranking-descargas{text-align:center;color:#fff;font-weight:600;letter-spacing:2px;margin-bottom:10px;font-size:.95rem}
+.music-ui{position:fixed;bottom:20px;right:20px;display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.95);padding:8px 14px;border-radius:50px;border:1px solid #fff;z-index:9999}
+#btn-music{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle,#fff,#aaa);color:#000;border:1px solid #fff;cursor:pointer;font-size:16px;font-weight:700}
+.barra{width:100px;height:5px;background:#222;border-radius:10px;overflow:hidden}
+.progreso{width:0%;height:100%;background:linear-gradient(90deg,#fff,#ccc)}
+@media(max-width:600px){.menu button{padding:8px 12px;font-size:.65rem;width:45%}.staff{grid-template-columns:1fr}.avatar{width:75px;height:75px}.aportes-grid{grid-template-columns:1fr}.barra{width:60px}}
+</style>
+</head>
+<body>
+
+<video autoplay muted loop id="video-fondo" playsinline>
+<source src="https://files.catbox.moe/73e4us.mp4" type="video/mp4">
+</video>
+<div class="overlay"></div>
+
+<div id="login">
+<div class="logo">PRIVS CHPPS</div>
+<div class="sub">MAKE MONET NOT FRIENDS</div>
+<button id="btn-ingresar">INGRESAR 🕷</button>
+</div>
+
+<div id="disparo-overlay"></div>
+<div class="onda-disparo" id="ondaDisparo"></div>
+<div id="contenedor-rayos"></div>
+<div class="flash-rayo" id="flashRayo"></div>
+
+<div class="contenido" id="contenido">
+<audio id="musica" loop>
+<source src="https://files.catbox.moe/cvipqy.mp3" type="audio/mpeg">
+</audio>
+
+<div class="titulo">PRIVS CHPPS</div>
+<div class="subtitulo">MAKE MONET NOT FRIENDS</div>
+
+<div class="menu-wrapper">
+<div class="menu">
+<button onclick="mostrar('equipo', this)" class="activo">EQUIPO</button>
+<button onclick="mostrar('datas', this)">DATAS</button>
+<button onclick="mostrar('descargas', this)">APORTES TOP</button>
+<button onclick="mostrar('venta', this)">APORTES EN VENTA</button>
+<button onclick="mostrar('mas-descargas', this)">🔥 MÁS DESCARGAS</button>
+</div>
+</div>
+
+<div id="equipo" class="seccion staff activa">
+<div class="card" onclick="abrirPerfil('clarent')">
+<div class="avatar"><img src="https://cdn.discordapp.com/attachments/1399626849612595361/1548365660621635674/Clarent.jfif?ex=6aa6cb64&is=6aa579e4&hm=c4e6919256e899573cd217a3d38d3e9368c79e8fb00f4cdb387863a143aa3198&" alt="Clarent"></div>
+<div class="name">CLARENT <span class="emoji-dragon">🐲</span></div>
+<div class="role">OWNER</div>
+<div class="ver-perfil">▶ Ver aportes</div>
+</div>
+<div class="card" onclick="abrirPerfil('young')">
+<div class="avatar"><img src="https://cdn.discordapp.com/attachments/1399626849612595361/1548364073048219758/39a4f05fb48c3d347fd4f804167a6d23.jpg?ex=6aa6c9ea&is=6aa5786a&hm=7df260d067386bce89271aa9b953277be4425f2835670a9d243242054037e370&" alt="Young"></div>
+<div class="name">YOUNG</div>
+<div class="role">OWNER</div>
+<div class="ver-perfil">▶ Ver aportes</div>
+</div>
+</div>
+
+<div id="perfil-clarent" class="seccion aportes-grid"></div>
+<div id="perfil-young" class="seccion aportes-grid"></div>
+<div id="datas" class="seccion aportes-grid"></div>
+<div id="descargas" class="seccion aportes-grid"></div>
+
+<div id="venta" class="seccion aportes-grid">
+<div class="aporte-card">
+<h3>PROXIMAMENTE</h3>
+<p>CREADOR: NADIE</p>
+<p>PRECIO: <span class="rojo">PROXIMAMENTE</span></p>
+<div class="video-thumb"><img src="PROXIMAMENTE" alt="PROXIMAMENTE"></div>
+<a href="" target="_blank" class="btn-descarga">💬 COMPRAR</a>
+</div>
+</div>
+
+<div id="mas-descargas" class="seccion aportes-grid"></div>
+
+</div>
+
+<div class="music-ui">
+<button id="btn-music">▶</button>
+<div class="barra"><div class="progreso"></div></div>
+</div>
+
+<script>
+var login=document.getElementById('login');
+var btnIngresar=document.getElementById('btn-ingresar');
+var contenido=document.getElementById('contenido');
+var audio=document.getElementById('musica');
+var btn=document.getElementById('btn-music');
+var progreso=document.querySelector('.progreso');
+var disparoOverlay=document.getElementById('disparo-overlay');
+var ondaDisparo=document.getElementById('ondaDisparo');
+var contenedorRayos=document.getElementById('contenedor-rayos');
+var flashRayo=document.getElementById('flashRayo');
+var intervaloRayos=null;
+
+btnIngresar.addEventListener('click',function(){
+  disparoOverlay.classList.add('activo');
+  ondaDisparo.classList.add('activa');
+  document.body.classList.add('shake');
+  setTimeout(function(){
+    disparoOverlay.classList.remove('activo');
+    ondaDisparo.classList.remove('activa');
+    document.body.classList.remove('shake');
+  },1000);
+  login.classList.add('oculto');
+  contenido.classList.add('visible');
+  var secs=document.querySelectorAll('.seccion');
+  for(var i=0;i<secs.length;i++){secs[i].classList.remove('activa');}
+  document.getElementById('equipo').classList.add('activa');
+  var bts=document.querySelectorAll('.menu button');
+  for(var j=0;j<bts.length;j++){bts[j].classList.remove('activo');}
+  document.querySelector('.menu button').classList.add('activo');
+  audio.volume=1;
+  audio.play().then(function(){btn.textContent='⏸';}).catch(function(){btn.textContent='▶';});
+});
+
+var APORTES_CHPSS=[
+  {id:'kdj-clarent',nombre:'KDJ CLARENT',creador:'CLARENT',peso:'293MB',imagen:'https://files.catbox.moe/xtmw1q.png',link:'https://www.mediafire.com/file/21wv6rc9qq278so/KDJ_Clarent.rar/file'}
+];
+
+var APORTES_YOUNG=[];
+
+var TODOS_APORTES=APORTES_CHPSS.concat(APORTES_YOUNG);
+
+function cargarDescargas(){
+  try{
+    var stored=localStorage.getItem('descargas_aportes');
+    if(stored){return JSON.parse(stored);}
+  }catch(e){}
+  var inicial={};
+  for(var i=0;i<TODOS_APORTES.length;i++){inicial[TODOS_APORTES[i].id]=0;}
+  localStorage.setItem('descargas_aportes',JSON.stringify(inicial));
+  return inicial;
+}
+
+var descargasData=cargarDescargas();
+
+function contarDescarga(id){
+  if(!descargasData[id]){descargasData[id]=0;}
+  descargasData[id]+=1;
+  localStorage.setItem('descargas_aportes',JSON.stringify(descargasData));
+  actualizarRanking();
+  renderPerfilClarent();
+  renderPerfilYoung();
+}
+window.contarDescarga=contarDescarga;
+
+function abrirPerfil(quien){
+  flashRayo.classList.remove('activo');
+  void flashRayo.offsetWidth;
+  flashRayo.classList.add('activo');
+  setTimeout(function(){flashRayo.classList.remove('activo');},500);
+  var secs=document.querySelectorAll('.seccion');
+  for(var i=0;i<secs.length;i++){secs[i].classList.remove('activa');}
+  var bts=document.querySelectorAll('.menu button');
+  for(var j=0;j<bts.length;j++){bts[j].classList.remove('activo');}
+  if(quien==='clarent'){
+    document.getElementById('perfil-clarent').classList.add('activa');
+    renderPerfilClarent();
+  }else if(quien==='young'){
+    document.getElementById('perfil-young').classList.add('activa');
+    renderPerfilYoung();
+  }
+  activarRayos();
+}
+window.abrirPerfil=abrirPerfil;
+
+function crearAporteCard(aporte){
+  var d=descargasData[aporte.id]||0;
+  var card=document.createElement('div');
+  card.className='aporte-card';
+  card.innerHTML='<h3>'+aporte.nombre+'</h3>'+
+    '<p>CREADOR: '+aporte.creador+'</p>'+
+    '<p>PESO: <span class="rojo">'+aporte.peso+'</span></p>'+
+    '<p>DESCARGAS: <span class="verde">'+d+'</span></p>'+
+    '<div class="video-thumb"><img src="'+aporte.imagen+'" alt="'+aporte.nombre+'"></div>'+
+    '<a href="'+aporte.link+'" target="_blank" class="btn-descarga" onclick="contarDescarga(\''+aporte.id+'\')">INSTALAR</a>';
+  return card;
+}
+
+function renderPerfilClarent(){
+  var cont=document.getElementById('perfil-clarent');
+  if(!cont){return;}
+  cont.innerHTML='';
+  var header=document.createElement('div');
+  header.style.gridColumn='1 / -1';
+  header.innerHTML='<div class="perfil-titulo">CLARENT <span class="emoji-dragon">🐲</span></div><div class="perfil-sub">APORTES DE CLARENT</div>';
+  cont.appendChild(header);
+  for(var i=0;i<APORTES_CHPSS.length;i++){
+    cont.appendChild(crearAporteCard(APORTES_CHPSS[i]));
+  }
+  var volver=document.createElement('div');
+  volver.style.gridColumn='1 / -1';
+  volver.style.textAlign='center';
+  volver.innerHTML='<button class="btn-volver" onclick="volverEquipo()">← Volver al equipo</button>';
+  cont.appendChild(volver);
+}
+
+function renderPerfilYoung(){
+  var cont=document.getElementById('perfil-young');
+  if(!cont){return;}
+  cont.innerHTML='';
+  var header=document.createElement('div');
+  header.style.gridColumn='1 / -1';
+  header.innerHTML='<div class="perfil-titulo">YOUNG</div><div class="perfil-sub">APORTES DE YOUNG</div>';
+  cont.appendChild(header);
+  if(APORTES_YOUNG.length===0){
+    var vacio=document.createElement('div');
+    vacio.style.gridColumn='1 / -1';
+    vacio.style.textAlign='center';
+    vacio.style.color='#888';
+    vacio.style.letterSpacing='3px';
+    vacio.style.textTransform='uppercase';
+    vacio.style.fontWeight='600';
+    vacio.style.padding='40px 0';
+    vacio.textContent='PRÓXIMAMENTE APORTES';
+    cont.appendChild(vacio);
+  }else{
+    for(var i=0;i<APORTES_YOUNG.length;i++){
+      cont.appendChild(crearAporteCard(APORTES_YOUNG[i]));
+    }
+  }
+  var volver=document.createElement('div');
+  volver.style.gridColumn='1 / -1';
+  volver.style.textAlign='center';
+  volver.innerHTML='<button class="btn-volver" onclick="volverEquipo()">← Volver al equipo</button>';
+  cont.appendChild(volver);
+}
+
+function volverEquipo(){
+  var secs=document.querySelectorAll('.seccion');
+  for(var i=0;i<secs.length;i++){secs[i].classList.remove('activa');}
+  document.getElementById('equipo').classList.add('activa');
+  var bts=document.querySelectorAll('.menu button');
+  for(var j=0;j<bts.length;j++){bts[j].classList.remove('activo');}
+  document.querySelector('.menu button').classList.add('activo');
+  desactivarRayos();
+}
+window.volverEquipo=volverEquipo;
+
+function actualizarRanking(){
+  var contenedor=document.getElementById('mas-descargas');
+  if(!contenedor){return;}
+  var ordenados=TODOS_APORTES.slice().sort(function(a,b){
+    var da=descargasData[a.id]||0;
+    var db=descargasData[b.id]||0;
+    return db-da;
+  });
+  contenedor.innerHTML='';
+  for(var i=0;i<ordenados.length;i++){
+    var aporte=ordenados[i];
+    var d=descargasData[aporte.id]||0;
+    var medalla=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    var card=document.createElement('div');
+    card.className='aporte-card ranking-item';
+    card.innerHTML='<div class="ranking-numero">#'+(i+1)+' '+medalla+'</div>'+
+      '<div class="ranking-badge">'+d+' ⬇</div>'+
+      '<h3>'+aporte.nombre+'</h3>'+
+      '<p>CREADOR: '+aporte.creador+'</p>'+
+      '<p>PESO: <span class="rojo">'+aporte.peso+'</span></p>'+
+      '<div class="ranking-descargas">🔥 '+d+' DESCARGAS</div>'+
+      '<div class="video-thumb"><img src="'+aporte.imagen+'" alt="'+aporte.nombre+'"></div>'+
+      '<a href="'+aporte.link+'" target="_blank" class="btn-descarga" onclick="contarDescarga(\''+aporte.id+'\')">INSTALAR</a>';
+    contenedor.appendChild(card);
+  }
+}
+
+setInterval(function(){descargasData=cargarDescargas();actualizarRanking();},5000);
+actualizarRanking();
+
+function generarCamino(x0,y0,x1,y1,segmentos,desviacion){
+  var puntos=[[x0,y0]];
+  for(var i=1;i<segmentos;i++){
+    var t=i/segmentos;
+    var x=x0+(x1-x0)*t+(Math.random()-0.5)*desviacion;
+    var y=y0+(y1-y0)*t+(Math.random()-0.5)*desviacion*0.3;
+    puntos.push([x,y]);
+  }
+  puntos.push([x1,y1]);
+  return puntos;
+}
+
+function puntosAPath(puntos){
+  var d='M '+puntos[0][0].toFixed(1)+' '+puntos[0][1].toFixed(1);
+  for(var i=1;i<puntos.length;i++){
+    d+=' L '+puntos[i][0].toFixed(1)+' '+puntos[i][1].toFixed(1);
+  }
+  return d;
+}
+
+function crearRayoReal(){
+  var W=window.innerWidth;
+  var H=window.innerHeight;
+  var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.classList.add('rayo-svg');
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.setAttribute('preserveAspectRatio','none');
+  var xInicio=Math.random()*W;
+  var yInicio=-50;
+  var xFin=xInicio+(Math.random()-0.5)*W*0.6;
+  var yFin=H+50;
+  var camino=generarCamino(xInicio,yInicio,xFin,yFin,12,W*0.08);
+  var d=puntosAPath(camino);
+  var halo2=document.createElementNS('http://www.w3.org/2000/svg','path');
+  halo2.setAttribute('d',d);halo2.setAttribute('class','halo2');svg.appendChild(halo2);
+  var halo=document.createElementNS('http://www.w3.org/2000/svg','path');
+  halo.setAttribute('d',d);halo.setAttribute('class','halo');svg.appendChild(halo);
+  var nucleo=document.createElementNS('http://www.w3.org/2000/svg','path');
+  nucleo.setAttribute('d',d);nucleo.setAttribute('class','nucleo');svg.appendChild(nucleo);
+  var numRamas=Math.floor(Math.random()*3)+2;
+  for(var i=0;i<numRamas;i++){
+    var idx=Math.floor(Math.random()*(camino.length-2))+1;
+    var punto=camino[idx];
+    var longRama=Math.random()*80+50;
+    var angulo=Math.atan2(yFin-yInicio,xFin-xInicio)+(Math.random()-0.5)*1.5;
+    var ramaX=punto[0]+Math.cos(angulo)*longRama;
+    var ramaY=punto[1]+Math.sin(angulo)*longRama;
+    var ramaCamino=generarCamino(punto[0],punto[1],ramaX,ramaY,5,25);
+    var ramaPath=document.createElementNS('http://www.w3.org/2000/svg','path');
+    ramaPath.setAttribute('d',puntosAPath(ramaCamino));
+    ramaPath.setAttribute('class','nucleo');
+    ramaPath.setAttribute('style','stroke-width: 2;');
+    svg.appendChild(ramaPath);
+  }
+  contenedorRayos.appendChild(svg);
+  setTimeout(function(){svg.remove();},1500);
+}
+
+function activarRayos(){
+  if(intervaloRayos){return;}
+  contenedorRayos.classList.add('activo');
+  for(var i=0;i<4;i++){setTimeout(crearRayoReal,i*120);}
+  intervaloRayos=setInterval(function(){
+    crearRayoReal();
+    if(Math.random()>0.5){crearRayoReal();}
+  },450);
+}
+
+function desactivarRayos(){
+  contenedorRayos.classList.remove('activo');
+  if(intervaloRayos){clearInterval(intervaloRayos);intervaloRayos=null;}
+  setTimeout(function(){contenedorRayos.innerHTML='';},900);
+}
+
+function mostrar(id,boton){
+  flashRayo.classList.remove('activo');
+  void flashRayo.offsetWidth;
+  flashRayo.classList.add('activo');
+  setTimeout(function(){flashRayo.classList.remove('activo');},500);
+  var secs=document.querySelectorAll('.seccion');
+  for(var i=0;i<secs.length;i++){secs[i].classList.remove('activa');}
+  document.getElementById(id).classList.add('activa');
+  var bts=document.querySelectorAll('.menu button');
+  for(var j=0;j<bts.length;j++){bts[j].classList.remove('activo');}
+  boton.classList.add('activo');
+  if(id==='datas'||id==='descargas'||id==='venta'||id==='mas-descargas'){
+    activarRayos();
+  }else{
+    desactivarRayos();
+  }
+}
+window.mostrar=mostrar;
+
+btn.addEventListener('click',function(){
+  if(audio.paused){audio.play();btn.textContent='⏸';}
+  else{audio.pause();btn.textContent='▶';}
+});
+
+audio.addEventListener('timeupdate',function(){
+  if(audio.duration){
+    progreso.style.width=(audio.currentTime/audio.duration*100)+'%';
+  }
+});
+</script>
+</body>
+</html>
